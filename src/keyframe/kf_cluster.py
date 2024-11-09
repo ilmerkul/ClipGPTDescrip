@@ -44,7 +44,7 @@ class KFCluster(object):
         brightness_score = np.asarray(list(map(self.__get_brighness_score__, frames)))
 
         entropy_score = np.asarray(list(map(self.__get_entropy_score__, frames)))
-        print(brightness_score, entropy_score)
+
         brightness_ok = np.logical_and(
             brightness_score > self.min_brightness_value,
             brightness_score < self.max_brightness_value,

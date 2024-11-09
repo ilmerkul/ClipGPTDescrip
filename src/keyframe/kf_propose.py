@@ -4,20 +4,11 @@ from scipy.signal import argrelextrema
 import matplotlib.pyplot as plt
 
 
-class Configs:
-    USE_LOCAL_MAXIMA = True
-
-    len_window = 10
-
-    max_frames_in_chunk = 2500
-    window_type = "hanning"
-
-
 class KFPropose:
     def __init__(self):
-        self.USE_LOCAL_MAXIMA = Configs.USE_LOCAL_MAXIMA
-        self.len_window = Configs.len_window
-        self.max_frames_in_chunk = Configs.max_frames_in_chunk
+        self.USE_LOCAL_MAXIMA = True
+        self.len_window = 10
+        self.max_frames_in_chunk = 2500
 
     def __calculate_frame_difference(self, curr_frame, prev_frame):
         if curr_frame is not None and prev_frame is not None:
@@ -38,8 +29,8 @@ class KFPropose:
 
         return curr_frame
 
-    def __extract_all_frames_from_video__(self, path):
-        cap = cv2.VideoCapture(str(path))
+    def __extract_all_frames_from_video__(self, path: str):
+        cap = cv2.VideoCapture(path)
 
         while True:
             prev_frame = None
@@ -49,7 +40,8 @@ class KFPropose:
             ret, frame = cap.read()
             for _ in range(0, self.max_frames_in_chunk):
                 if not ret:
-                    yield frames, frame_diffs
+                    if len(frame_diffs) >= self.len_window:
+                        yield frames, frame_diffs
                     cap.release()
                     return
                 prev_frame = self.__process_frame(frame, prev_frame, frame_diffs, frames)
@@ -70,7 +62,7 @@ class KFPropose:
 
         return [frames[idx - 1] for idx in frame_indexes]
 
-    def __smooth__(self, x, window_len, window=Configs.window_type):
+    def __smooth__(self, x, window_len, window="hanning"):
         if x.ndim != 1:
             raise (ValueError, "smooth only accepts 1 dimension arrays.")
 
@@ -115,11 +107,13 @@ class KFPropose:
             plt.show()
             # cv2.imshow('frames', frame)
 
-    def save_frames(self, frames):
-        fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
+    def save_frames(self, frames: np.array, path: str):
+        for i, frame in enumerate(frames):
+            cv2.imwrite(f'{path}/frame_{i}.png', frame)
+        # fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        # out = cv2.VideoWriter('output.avi', fourcc, 20.0, (640, 480))
 
-        for frame in frames:
-            out.write(frame)
+        # for frame in frames:
+        #    out.write(frame)
 
-        out.release()
+        # out.release()
